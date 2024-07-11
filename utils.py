@@ -1,4 +1,6 @@
 import os
+import requests
+import base64
 
 TOKEN_FILE = "github_token.txt"
 
@@ -17,3 +19,16 @@ def get_repo_url(repo_name):
     if not user:
         raise EnvironmentError("GITHUB_USER environment variable not set.")
     return f"https://api.github.com/repos/{user}/{repo_name}"
+
+def download_file(repo_name, file_name, download_path):
+    token = load_github_token()
+    headers = {"Authorization": f"token {token}"}
+    url = get_repo_url(repo_name) + f"/contents/{file_name}"
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        content = base64.b64decode(response.json()["content"])
+        with open(download_path, "wb") as file:
+            file.write(content)
+        print(f"File {file_name} downloaded successfully to {download_path}.")
+    else:
+        print(f"Error downloading file: {response.json()}")
